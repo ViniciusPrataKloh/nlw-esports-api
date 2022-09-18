@@ -1,10 +1,12 @@
 import { PrismaClient } from "@prisma/client";
 import express from "express";
+import cors from "cors";
 import { convertMinutesToHoursString } from "./utils/convert-minutes-to-hours-string";
 import { convertStringHoursToMinutes } from "./utils/convert-string-hours-to-minutes";
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 const prisma = new PrismaClient();
 
@@ -20,7 +22,22 @@ app.get("/games", async (request, response) => {
     });
 
     return response.status(200).json(games);
-})
+});
+
+app.get("/games/initialGames", async (request, response) => {
+    const games = await prisma.game.findMany({
+        take: 6,
+        include: {
+            _count: {
+                select: {
+                    Ad: true
+                }
+            }
+        }
+    });
+
+    return response.status(200).json(games);
+});
 
 app.post("/games/:id/ads", async (request, response) => {
     const gameId = request.params.id;
